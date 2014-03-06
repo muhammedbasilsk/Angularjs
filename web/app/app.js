@@ -1,7 +1,13 @@
-var app = angular.module('actonApp', ['ajoslin.mobile-navigate','ngCookies','hammer']);
+var app = angular.module('actonApp', ['ajoslin.mobile-navigate','ngCookies','hammer', 'facebookUtils','ngRoute']);
 
 app.config(function ($httpProvider) {
     delete $httpProvider.defaults.headers.common['X-Requested-With'];
+});
+
+app.constant('facebookConfigSettings', {
+    'appID' : '<your app key>',
+    'routingEnabled' : true,
+    'channel': 'views/facebook/channel.html'
 });
 
 app.config(function ($routeProvider) {
@@ -97,6 +103,24 @@ app.config(function ($routeProvider) {
         }).otherwise({
             redirectTo: "/home"
         });
+});
+
+app.controller('RootCtrl', function($rootScope, $scope, facebookUser) {
+    $rootScope.loggedInUser = {};
+
+    $rootScope.$on('fbLoginSuccess', function(name, response) {
+      facebookUser.then(function(user) {
+        user.api('/me').then(function(response) {
+          $rootScope.loggedInUser = response;
+        });
+      });
+    });
+
+    $rootScope.$on('fbLogoutSuccess', function() {
+      $scope.$apply(function() {
+        $rootScope.loggedInUser = {};
+      });
+    });
 });
 
 app.run(function ($route, $http, $templateCache) {
